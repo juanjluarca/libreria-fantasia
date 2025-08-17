@@ -1,0 +1,14 @@
+bcrypt==4.3.0
+cffi==1.17.1
+chardet==5.2.0
+cryptography==44.0.2
+mysql==0.0.3
+mysql-connector-python==9.2.0
+mysqlclient==2.2.7
+pillow==11.2.1
+pycparser==2.22
+PyMySQL==1.1.1
+PyQt6==6.9.0
+PyQt6-Qt6==6.9.0
+PyQt6_sip==13.10.0
+reportlab==4.4.1

@@ -1,0 +1,27 @@
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS ModificarDetalleCompra;
+CREATE PROCEDURE ModificarDetalleCompra(vDetalleId INT, vNuevaCantidad INT)
+BEGIN
+    DECLARE vCompraId INT;
+    DECLARE vPrecio FLOAT;
+    DECLARE vCantidad INT;
+
+    -- Obtenemos el ID, precio y antigua cantidad de la compra asociada
+    SELECT Compra_id, precio_unitario, cantidad_recibida
+    INTO vCompraId, vPrecio, vCantidad
+    FROM detalle_compra
+    WHERE id = vDetalleId;
+
+    -- Actualizamos la cantidad recibida
+    UPDATE detalle_compra 
+    SET cantidad_recibida = vNuevaCantidad
+    WHERE id = vDetalleId;
+
+    -- Actualizamos el total de la compra
+    UPDATE compra 
+    SET total_compra = total_compra - vPrecio * (vCantidad - vNuevaCantidad) 
+    WHERE id = vCompraId;
+END
+
+DELIMITER ;
