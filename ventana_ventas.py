@@ -335,6 +335,8 @@ class Ventana_ventas(Codigo):
 
     def confirmar_venta(self):
         # Primero confirmar la venta en la base de datos
+        
+        # Aquí debe iniciar una transacción
         self.base_datos.agregar_venta(self.id_usuario, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self.total_venta)
         id_venta = self.base_datos.obtener_id_ultima_venta()
         
@@ -345,7 +347,9 @@ class Ventana_ventas(Codigo):
             precio = producto[3]
             self.base_datos.modificar_producto_stock(id_producto, nuevo_stock)
             self.base_datos.agregar_detalle_venta(id_producto, id_venta, stock_venta, precio)
-
+        # Aquí finaliza la transacción
+        
+        
         # Preguntar si desea generar PDF
         respuesta = QMessageBox()
         respuesta.setStyleSheet("QMessageBox { color: black; background-color: #40BCFF;} QPushButton {color: black; background-color: #7C9DFF; border: 2px solid black; min-width: 50px; min-height: 20px;} QPushButton:hover {background-color: #38B3F5;} QPushButton:pressed {background-color: #2268F5;} QLabel{color: black;}")

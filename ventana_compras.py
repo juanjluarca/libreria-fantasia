@@ -747,12 +747,15 @@ class Ventana_compras(Codigo):
 
         # Generar la orden de compra
         try:
+            # Aquí debe iniciar una transacción
             id_compra = self.base_datos.agregar_compra(id_proveedor, datetime.now(), self.id_usuario, self.total_compra)
             for orden in self.carrito_ingreso:
                 id_orden = orden[0]
                 cantidad = orden[1]
                 precio_unitario = orden[2]
                 self.base_datos.agregar_detalle_compra(id_orden, id_compra, cantidad, precio_unitario, cantidad)
+            
+            # Aquí se finaliza la transacción
 
             self.tabla_ingreso.clearContents()
             self.tabla_ingreso.setRowCount(0)
@@ -1185,6 +1188,8 @@ class Ventana_compras(Codigo):
             fila = self.tabla_compras.currentRow()
             id_orden = int(self.tabla_compras.item(fila, 0).text())
 
+
+            # Confirmación del ingreso del pedido, aquí debe ir una transacción
             for i in range(self.tabla_ingreso.rowCount()):
                 # Verificar que la cantidad sea igual a la cantidad recibida
                 id_detalle = int(self.tabla_ingreso.item(i, 0).text())
@@ -1197,8 +1202,6 @@ class Ventana_compras(Codigo):
                     # Modificar el detalle de la orden en bd
                     cantidad = cantidad_recibida
                     self.base_datos.modificar_detalle_compra(id_detalle, cantidad)
-
-
                 # Agregar al carrito de ingreso
                 self.carrito_ingreso.append([id_producto, cantidad, precio_unitario, id_detalle])
 
@@ -1210,6 +1213,9 @@ class Ventana_compras(Codigo):
                 self.base_datos.aumentar_stock_producto(id_producto, cantidad)
             # Cambiar el estado de la orden a 1 (confirmada)
             self.base_datos.confirmar_orden_compra(id_orden)
+
+            # Aquí finaliza la transacción
+
 
             # Recargar la tabla de compras
             self.ordenes_compra()
