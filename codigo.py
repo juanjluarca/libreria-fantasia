@@ -57,7 +57,7 @@ class Codigo:
     def mensaje_error(self, titulo, mensaje):
         mesaje_error = QMessageBox()
         mesaje_error.setIcon(QMessageBox.Icon.Warning)
-        mesaje_error.setStyleSheet("QMessageBox { color: black; background-color: #FF0024;} QPushButton {color: black; background-color: #FF4866; border: 2px solid black; min-width: 50px; min-height: 20px; border-radius: 5px;} QPushButton:hover {background-color: #FF3D7E;} QPushButton:pressed {background-color: #FF0000;} QLabel{color: black;}")
+        mesaje_error.setStyleSheet("QMessageBox { color: black; background-color: #40BCFF;} QPushButton {color: black; background-color: #FF4866; border: 2px solid black; min-width: 50px; min-height: 20px; border-radius: 5px;} QPushButton:hover {background-color: #FF3D7E;} QPushButton:pressed {background-color: #FF0000;} QLabel{color: black;}")
         mesaje_error.setWindowIcon(QIcon(self.generacion_directorio("imagenes/warning.ico"))) 
         mesaje_error.setWindowTitle(titulo)
         mesaje_error.setText(mensaje)

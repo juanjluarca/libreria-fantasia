@@ -173,10 +173,10 @@ class BaseDatos:
             return cursor.lastrowid
         self.conexion.commit()
 
-    def confirmar_orden_compra(self, id):
+    def confirmar_orden_compra(self, id, total):
         # Confirmar orden de compra (cambiar estado)
         with self.conexion.cursor() as cursor:
-            cursor.execute("UPDATE compra SET estado = %s WHERE id = %s", (1, id))
+            cursor.execute("UPDATE compra SET estado = %s, total_compra = %s WHERE id = %s", (1, total, id))
         self.conexion.commit()
 
     def obtener_compras_pendientes(self):
@@ -187,6 +187,12 @@ class BaseDatos:
                             JOIN proveedor p ON c.Proveedor_id = p.id
                             WHERE c.estado = 0 ORDER BY c.fecha DESC""")
             return cursor.fetchall()
+        
+    def modificar_total_compra(self, id, total):
+        with self.conexion.cursor() as cursor:
+            sql = """UPDATE compra SET total_compra = %s WHERE id = %s"""
+            cursor.execute(sql, (total, id))
+        self.conexion.commit()
 
     def agregar_detalle_compra(self, producto_id, compra_id, cantidad, precio, cantidad_recibida):
         # Agregar detalle a la compra
@@ -205,7 +211,7 @@ class BaseDatos:
                             JOIN producto p ON dc.Producto_id = p.id
                             WHERE dc.Compra_id = %s""", (id,))
             return cursor.fetchall()
-        
+
     def modificar_detalle_compra(self, id, cantidad_recibida):
         with self.conexion.cursor() as cursor:
             cursor.callproc("ModificarDetalleCompra", (id, cantidad_recibida))

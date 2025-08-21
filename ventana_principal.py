@@ -26,6 +26,7 @@ class Ventana_principal(Codigo):
         self.window2.setWindowIcon(QIcon("imagenes/logo.ico"))
         self.fondo_degradado(self.window2, "#0037FF", "#5DA9F5")
         self.window2.setWindowTitle("Bienvenido al sistema" + " " + self.line1.text())
+        self.window2.setWindowFlags(Qt.WindowType.Window);
         nivel = self.base_datos.obtener_nivel_usuario(self.line1.text())
 
         main_layout = QHBoxLayout()
