@@ -13,6 +13,24 @@ class BaseDatos:
             database="modelo_proyecto",
             cursorclass=cursors.DictCursor
         )
+        self.conexion.autocommit(True)  # Habilitar autocommit para validar rollbacks
+        self.conexion.cursor.execute("SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ")  # Configurar nivel
+
+    # =======================
+    # MÉTODOS DE TRANSACCIONES
+    # =======================
+
+    def iniciar_transaccion(self):
+        # Iniciar una transacción
+        self.conexion.cursor().execute("START TRANSACTION")
+
+    def confirmar_transaccion(self):
+        # Confirmar la transacción
+        self.conexion.cursor().execute("COMMIT")
+
+    def revertir_transaccion(self):
+        # Revertir la transacción
+        self.conexion.cursor().execute("ROLLBACK")
 
     # =======================
     # MÉTODOS DE USUARIOS
