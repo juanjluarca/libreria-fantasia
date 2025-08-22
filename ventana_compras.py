@@ -924,23 +924,24 @@ class Ventana_compras(Codigo):
         self.nueva_ventana = None
 
     def confirmar_cantidad_ingreso(self):
+        # Obtener fila seleccionada y cantidad
+        fila = self.tabla_inventario.currentRow()
+        cantidad_texto = self.cantidad.text()
+        
+        # Validar cantidad
         try:
-            # Obtener fila seleccionada y cantidad
-            fila = self.tabla_inventario.currentRow()
-            cantidad_texto = self.cantidad.text()
-            
-            # Validar cantidad
-            if not cantidad_texto.isdigit() or int(cantidad_texto) <= 0:
-                self.mensaje_error("Error", "Ingrese una cantidad válida (número mayor que 0).")
-                return
-
             cantidad = int(cantidad_texto)
+        except:
+            cantidad = None
 
-            # Obtener datos del producto
-            id_producto = int(self.tabla_inventario.item(fila, 0).text())
-            nombre_producto = self.tabla_inventario.item(fila, 1).text()
-            precio_texto = self.tabla_inventario.item(fila, 4).text()[1:]  # Eliminar 'Q'
-            precio_producto = float(precio_texto)
+
+        # Obtener datos del producto
+        id_producto = int(self.tabla_inventario.item(fila, 0).text())
+        nombre_producto = self.tabla_inventario.item(fila, 1).text()
+        precio_texto = self.tabla_inventario.item(fila, 4).text()[1:]  # Eliminar 'Q'
+        precio_producto = float(precio_texto)
+
+        if cantidad is not None:
             total_producto = cantidad * precio_producto
 
             # Verificar si el producto ya está en el carrito
@@ -977,9 +978,32 @@ class Ventana_compras(Codigo):
             self.total.setPlaceholderText(f"Total del ingreso: Q{self.total_compra:.2f}")
             self.nueva_ventana.close()
             self.nueva_ventana = None
+        else:
+            fila_nueva = self.tabla_ingreso.rowCount()
+            self.tabla_ingreso.insertRow(fila_nueva)
 
-        except Exception as e:
-            self.mensaje_error("Error", f"Ocurrió un error al agregar el producto: {str(e)}")
+            # Crear items para cada columna
+            items = [
+                QTableWidgetItem(str(id_producto)),
+                QTableWidgetItem(nombre_producto),
+                QTableWidgetItem(cantidad_texto),
+                QTableWidgetItem(f"Q{precio_producto:.2f}")
+            ]
+
+            # Configurar items y añadirlos a la tabla
+            for col, item in enumerate(items):
+                item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+                self.tabla_ingreso.setItem(fila_nueva, col, item)
+
+            # Actualizar variables de estado
+            self.carrito_ingreso.append([id_producto, cantidad_texto, precio_producto]) # Carrio guarada id, cantidad, precio_producto
+            total_producto = precio_producto
+            self.total_compra += total_producto
+            self.total.setPlaceholderText(f"Total del ingreso: Q{self.total_compra:.2f}")
+            self.nueva_ventana.close()
+            self.nueva_ventana = None
+
+
 
     def cancelar_cantidad_ingreso(self):
         self.nueva_ventana.close()
@@ -1187,6 +1211,8 @@ class Ventana_compras(Codigo):
             # y actualizar el stock de cada orden
             fila = self.tabla_compras.currentRow()
             id_orden = int(self.tabla_compras.item(fila, 0).text())
+            texto = self.tabla_compras.item(fila, 3).text()
+            total = float(texto[1:].strip())
 
 
             # Confirmación del ingreso del pedido, aquí debe ir una transacción
@@ -1196,14 +1222,21 @@ class Ventana_compras(Codigo):
                 id_producto = int(self.tabla_ingreso.item(i, 1).text())
                 precio_unitario = float(self.tabla_ingreso.item(i, 3).text()[1:])
                 cantidad = int(self.tabla_ingreso.item(i, 4).text())
-                cantidad_recibida = int(self.tabla_ingreso.item(i, 5).text())
+                cantidad_recibida = self.tabla_ingreso.item(i, 5).text()
+                try:
+                    cantidad_recibida = int(cantidad_recibida)
+                except:
+                    pass
 
                 if cantidad_recibida != cantidad:
                     # Modificar el detalle de la orden en bd
-                    cantidad = cantidad_recibida
-                    self.base_datos.modificar_detalle_compra(id_detalle, cantidad)
+                    print("llegó aquí")
+                    self.base_datos.modificar_detalle_compra(id_detalle, cantidad_recibida)
+                    print("Aquí también")
+                    total -= precio_unitario * (int(cantidad) - int(cantidad_recibida))
                 # Agregar al carrito de ingreso
-                self.carrito_ingreso.append([id_producto, cantidad, precio_unitario, id_detalle])
+
+                self.carrito_ingreso.append([id_producto, cantidad_recibida, precio_unitario, id_detalle])
 
             for producto in self.carrito_ingreso:
                 id_producto = producto[0]
@@ -1211,8 +1244,9 @@ class Ventana_compras(Codigo):
                 # Actualizar el stock del producto
 
                 self.base_datos.aumentar_stock_producto(id_producto, cantidad)
-            # Cambiar el estado de la orden a 1 (confirmada)
-            self.base_datos.confirmar_orden_compra(id_orden)
+
+            # Cambiar el estado de la orden a 1 (confirmada) y modificar el total si fue cambiado
+            self.base_datos.confirmar_orden_compra(id_orden, total)
 
             # Aquí finaliza la transacción
 
@@ -1230,7 +1264,7 @@ class Ventana_compras(Codigo):
             self.fila_ingreso = 0
 
         except Exception as e:
-            self.mensaje_error("Error", f"No se pudo registrar el ingreso: {str(e)}")
+            self.mensaje_error("Error - Rollback Realizado", f"No se pudo registrar el ingreso: {str(e)}")
 
 
 
