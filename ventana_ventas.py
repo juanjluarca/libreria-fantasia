@@ -276,48 +276,93 @@ class Ventana_ventas(Codigo):
         self.nueva_ventana.showNormal()
 
     def confirmar_cantidad(self):
+
         fila = self.tabla1.currentRow()
         cantidad = self.cantidad.text()
+        try:
+            cantidad_int = int(cantidad)
+        except:
+            cantidad_int = None
+    
+        id_producto = int(self.tabla1.item(fila, 0).text())
+        precio_producto = float(self.tabla1.item(fila, 4).text()[1:])
+        nombre_producto = self.tabla1.item(fila, 1).text()
 
         # Verificar que la cantidad sea menor o igual a la existencia del producto
         # y que sea un número positivo
-        if int(cantidad) <= int(self.tabla1.item(fila, 3).text()) and int(cantidad) > 0:
-            # Buscar en tabla carrito si el producto ya existe
-            nueva_cantidad = 0
-            for i in range(self.tabla2.rowCount()):
-                if self.tabla2.item(i, 0).text() == self.tabla1.item(fila, 0).text():
-                    # Si el producto ya existe, actualizar la cantidad 
-                    nueva_cantidad = int(self.tabla2.item(i, 2).text()) + int(cantidad)
-                    self.tabla2.setItem(i, 2, QTableWidgetItem(str(nueva_cantidad)))
-                    break
-            id_producto = int(self.tabla1.item(fila, 0).text())
-            precio_producto = float(self.tabla1.item(fila, 4).text()[1:])
-            total_producto = int(cantidad) * precio_producto
-            nombre_producto = self.tabla1.item(fila, 1).text()
-            if nueva_cantidad == 0:
-                # 👇 Insertar nueva fila en la tabla2
-                self.tabla2.insertRow(self.fila_carrito)
+        if cantidad_int is not None:
+            if int(cantidad) <= int(self.tabla1.item(fila, 3).text()) and int(cantidad) > 0:
+                total_producto = int(cantidad) * precio_producto
+                # Buscar en tabla carrito si el producto ya existe
+                nueva_cantidad = 0
+                for i in range(self.tabla2.rowCount()):
+                    if self.tabla2.item(i, 0).text() == self.tabla1.item(fila, 0).text():
+                        # Si el producto ya existe, actualizar la cantidad
+                        try:
+                            nueva_cantidad = int(self.tabla2.item(i, 2).text()) + int(cantidad)
+                        except:
+                            nueva_cantidad = self.tabla2.item(i, 2).text()
+                            
+                        self.tabla2.setItem(i, 2, QTableWidgetItem(str(nueva_cantidad)))
+                        break
 
-                item_id = QTableWidgetItem(str(id_producto))
-                item_nombre = QTableWidgetItem(nombre_producto)
-                item_cantidad = QTableWidgetItem(f"{cantidad}")
-                item_precio = QTableWidgetItem(f"Q{precio_producto:.2f}")
+                if nueva_cantidad == 0:
+                    # Insertar nueva fila en la tabla2
+                    self.tabla2.insertRow(self.fila_carrito)
 
-                self.tabla2.setItem(self.fila_carrito, 0, item_id)
-                self.tabla2.setItem(self.fila_carrito, 1, item_nombre)
-                self.tabla2.setItem(self.fila_carrito, 2, item_cantidad)
-                self.tabla2.setItem(self.fila_carrito, 3, item_precio)
+                    item_id = QTableWidgetItem(str(id_producto))
+                    item_nombre = QTableWidgetItem(nombre_producto)
+                    item_cantidad = QTableWidgetItem(f"{cantidad}")
+                    item_precio = QTableWidgetItem(f"Q{precio_producto:.2f}")
 
-                for col in range(4):
-                    item = self.tabla2.item(self.fila_carrito, col)
-                    item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+                    self.tabla2.setItem(self.fila_carrito, 0, item_id)
+                    self.tabla2.setItem(self.fila_carrito, 1, item_nombre)
+                    self.tabla2.setItem(self.fila_carrito, 2, item_cantidad)
+                    self.tabla2.setItem(self.fila_carrito, 3, item_precio)
 
-                self.fila_carrito += 1
+                    for col in range(4):
+                        item = self.tabla2.item(self.fila_carrito, col)
+                        item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
 
+                    self.fila_carrito += 1
+
+                self.total_venta += total_producto
+                self.total.setText(f"Total de compra: Q{self.total_venta:.2f}")
+                # Modificar el stock del producto en la base de datos
+                nuevo_stock = int(self.tabla1.item(fila, 3).text()) - int(cantidad)
+                self.carrito.append([id_producto, nuevo_stock, cantidad, precio_producto]) # El carrito almacena id, nuevo_stock, cantidad, precio
+
+
+                # Actualizar la tabla de ventas
+                self.tabla1.setItem(fila, 3, QTableWidgetItem(str(nuevo_stock)))
+                
+                # Cerrar la ventana de cantidad
+                self.nueva_ventana.close()
+                
+        else:
+            # Insertar nueva fila en la tabla2
+            self.tabla2.insertRow(self.fila_carrito)
+
+            item_id = QTableWidgetItem(str(id_producto))
+            item_nombre = QTableWidgetItem(nombre_producto)
+            item_cantidad = QTableWidgetItem(f"{cantidad}")
+            item_precio = QTableWidgetItem(f"Q{precio_producto:.2f}")
+
+            self.tabla2.setItem(self.fila_carrito, 0, item_id)
+            self.tabla2.setItem(self.fila_carrito, 1, item_nombre)
+            self.tabla2.setItem(self.fila_carrito, 2, item_cantidad)
+            self.tabla2.setItem(self.fila_carrito, 3, item_precio)
+
+            for col in range(4):
+                item = self.tabla2.item(self.fila_carrito, col)
+                item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+
+            self.fila_carrito += 1
+            total_producto = precio_producto
             self.total_venta += total_producto
             self.total.setText(f"Total de compra: Q{self.total_venta:.2f}")
             # Modificar el stock del producto en la base de datos
-            nuevo_stock = int(self.tabla1.item(fila, 3).text()) - int(cantidad)
+            nuevo_stock = int(self.tabla1.item(fila, 3).text())
             self.carrito.append([id_producto, nuevo_stock, cantidad, precio_producto]) # El carrito almacena id, nuevo_stock, cantidad, precio
 
 
@@ -326,130 +371,38 @@ class Ventana_ventas(Codigo):
             
             # Cerrar la ventana de cantidad
             self.nueva_ventana.close()
-            
-        else:
-            self.mensaje_error("Error", "La cantidad ingresada es mayor a la existencia del producto o no es válida")
             return
-
-
 
     def confirmar_venta(self):
         # Primero confirmar la venta en la base de datos
-        
-        # Aquí debe iniciar una transacción
-        self.base_datos.agregar_venta(self.id_usuario, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self.total_venta)
-        id_venta = self.base_datos.obtener_id_ultima_venta()
-        
-        for producto in self.carrito:
-            id_producto = producto[0]
-            nuevo_stock = producto[1]
-            stock_venta = producto[2]
-            precio = producto[3]
-            self.base_datos.modificar_producto_stock(id_producto, nuevo_stock)
-            self.base_datos.agregar_detalle_venta(id_producto, id_venta, stock_venta, precio)
-        # Aquí finaliza la transacción
-        
-        
-        # Preguntar si desea generar PDF
-        respuesta = QMessageBox()
-        respuesta.setStyleSheet("QMessageBox { color: black; background-color: #40BCFF;} QPushButton {color: black; background-color: #7C9DFF; border: 2px solid black; min-width: 50px; min-height: 20px;} QPushButton:hover {background-color: #38B3F5;} QPushButton:pressed {background-color: #2268F5;} QLabel{color: black;}")
-        respuesta.setWindowIcon(QIcon("imagenes/infomation.ico"))
-        respuesta.setWindowTitle("¿Generar comprobante?")
-        respuesta.setText("¿Desea generar un comprobante en PDF de esta venta?")
-        respuesta.setIcon(QMessageBox.Icon.Information)
-        respuesta.addButton("Si", QMessageBox.ButtonRole.YesRole)
-        respuesta.addButton("No", QMessageBox.ButtonRole.NoRole)
-        respuesta = respuesta.exec()
-        if respuesta == 2:
-            self.generar_pdf_venta(id_venta)
-        
-        self.tabla2.clearContents()
-        self.tabla2.setRowCount(0)
-        self.tabla2.setColumnCount(4)
-        self.carrito.clear()
-        self.total.clear()
-        self.total.setText("Total de compra: Q0")
-        self.fila_carrito = 0
-        self.total_venta = 0   
-
-    def generar_pdf_venta(self, id_venta):
         try:
-            # Obtener detalles de la venta
-            detalles_venta = self.base_datos.obtener_detalles_venta_para_pdf(id_venta)
-            if not detalles_venta:
-                raise ValueError("No se encontraron detalles para la venta")
-                
-            # Configurar diálogo para guardar archivo
-            fecha_venta = datetime.now().strftime("%Y%m%d_%H%M%S")
-            file_path, _ = QFileDialog.getSaveFileName(
-                self.layout.parentWidget(),
-                "Guardar Comprobante",
-                "C:/Users/queme/Desktop/ventas/" + f"Venta_{id_venta}_{fecha_venta}.pdf", 
-                "PDF Files (*.pdf)"
-            )
-            
-            if not file_path:
-                return  # Usuario canceló
 
-            # Crear PDF
-            c = canvas.Canvas(file_path, pagesize=letter)
-            width, height = letter  # Ahora letter está definido
+            # Aquí debe iniciar una transacción
+            self.base_datos.agregar_venta(self.id_usuario, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self.total_venta)
+            id_venta = self.base_datos.obtener_id_ultima_venta()
             
-            # Diseño del PDF
-            # 1. Encabezado
-            c.setFont("Helvetica-Bold", 16)
-            c.drawString(100, height - 100, "COMPROBANTE DE VENTA")
+            for producto in self.carrito:
+                id_producto = producto[0]
+                nuevo_stock = producto[1]
+                stock_venta = producto[2]
+                precio = producto[3]
+                self.base_datos.modificar_producto_stock(id_producto, nuevo_stock)
+                self.base_datos.agregar_detalle_venta(id_producto, id_venta, stock_venta, precio)
+            # Aquí finaliza la transacción
             
-            c.setFont("Helvetica", 10)
-            c.drawString(100, height - 130, f"N° Venta: {id_venta}")
-            c.drawString(100, height - 150, f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
-            c.drawString(100, height - 170, f"Atendido por: Empleado_{self.id_usuario}")
-            
-            # 2. Detalles de productos
-            c.setFont("Helvetica-Bold", 12)
-            c.drawString(100, height - 210, "DETALLE DE PRODUCTOS")
-            c.line(100, height - 215, width - 100, height - 215)
-            
-            y_position = height - 240
-            c.setFont("Helvetica-Bold", 10)
-            
-            # Encabezados de tabla
-            c.drawString(100, y_position, "Producto")
-            c.drawString(300, y_position, "Cant.")
-            c.drawString(350, y_position, "P.Unit.")
-            c.drawString(450, y_position, "Subtotal")
-            y_position -= 20
-            c.setFont("Helvetica", 10)
-            
-            # Productos
-            for producto in detalles_venta:
-                if y_position < 100:  # Salto de página
-                    c.showPage()
-                    y_position = height - 50
-                    c.setFont("Helvetica", 10)
-                
-                c.drawString(100, y_position, producto['nombre'][:30])  # Limita caracteres
-                c.drawString(300, y_position, str(producto['cantidad']))
-                c.drawString(350, y_position, f"Q{producto['precio_unitario']:.2f}")
-                c.drawString(450, y_position, f"Q{producto['subtotal']:.2f}")
-                y_position -= 20
-            
-            # 3. Totales
-            c.setFont("Helvetica-Bold", 12)
-            c.line(100, y_position - 10, width - 100, y_position - 10)
-            c.drawString(350, y_position - 30, "TOTAL:")
-            c.drawString(450, y_position - 30, f"Q{detalles_venta[0]['total_venta']:.2f}")
-            
-            # 4. Pie de página
-            c.setFont("Helvetica-Oblique", 8)
-            c.drawCentredString(width/2, 50, "Gracias por su compra - Sistema de Ventas")
-            
-            c.save()
-            
-            self.imprimir_reporte(file_path, "¿Imprimir ticket?", "¿Desea imprimir el ticket de la venta?")
-            
+            self.tabla2.clearContents()
+            self.tabla2.setRowCount(0)
+            self.tabla2.setColumnCount(4)
+            self.carrito.clear()
+            self.total.clear()
+            self.total.setText("Total de compra: Q0")
+            self.fila_carrito = 0
+            self.total_venta = 0   
         except Exception as e:
-            self.mensaje_error("Error en PDF", f"No se pudo generar el comprobante:\n{str(e)}")
+            self.mensaje_error("Error - Rollback realizado", f"No se pudo registrar el ingreso: {str(e)}")
+
+
+
 
     def llenar_inventario(self):
         # Volver a cargar la tabla de ventas con los productos originales
@@ -470,6 +423,7 @@ class Ventana_ventas(Codigo):
             self.tabla1.setItem(fila, 2, descripcion_item)
             self.tabla1.setItem(fila, 3, existencia_item)
             self.tabla1.setItem(fila, 4, precio_item)
+
 
     def cancelar_compra(self):
         # Volver a cargar la tabla de ventas con los productos originales
