@@ -89,7 +89,7 @@ class Ventana_inicio(Codigo):
         password = self.ingreso_contrasenia.text()
 
         try:
-            base_datos = BaseDatos('root', 'admin')
+            base_datos = BaseDatos('root', '2025000')
 
             # Cambio principal: PyMySQL no tiene is_connected(), verificamos con ping()
             if base_datos.conexion and base_datos.conexion.open:
@@ -137,12 +137,14 @@ class Ventana_inicio(Codigo):
                                 f"No se pudo conectar a la base de datos:\n{error_msg}")
             self.ingreso_usuario.clear()
             self.ingreso_contrasenia.clear()
+        """
         except Exception as e:
             print(f"Error inesperado: {str(e)}")
             self.mensaje_error("Error",
                                 f"Ocurrió un error inesperado:\n{str(e)}")
             self.ingreso_usuario.clear()
             self.ingreso_contrasenia.clear()
+        """
 
 
     def cerrar_programa(self):
