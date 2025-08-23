@@ -415,10 +415,11 @@ class Ventana_ventas(Codigo):
             db_actions += "ROLLBACK;"
             self.mensaje_error("Error - Rollback realizado", f"No se pudo registrar el ingreso: {str(e)}")
         
-        print(db_actions)
+        self.escribir_transacciones(db_actions)
 
-
-
+    def escribir_transacciones(self, transaction: str):
+        with open("executed_transactions_ventas.txt", "a", encoding="utf-8") as f:
+            f.write(transaction)
 
     def llenar_inventario(self):
         # Volver a cargar la tabla de ventas con los productos originales

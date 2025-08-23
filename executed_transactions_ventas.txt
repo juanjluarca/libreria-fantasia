@@ -1,0 +1,15 @@
+
+
+Confirmación de venta (2025-08-22 18:32:45):
+
+START TRANSACTION;
+   INSERT INTO venta (Empleado_id, fecha, total_venta) 
+                    VALUES (2, '2025-08-22 18:32:45', 406.25e0);
+  SELECT MAX(id) AS id FROM venta;
+   UPDATE modelo_proyecto.producto SET stock = 10 WHERE id = 6;
+   INSERT INTO detalle_venta (Producto_id, Venta_id, cantidad, precio) 
+                    VALUES (6, 17, '5', 80.0e0);
+   UPDATE modelo_proyecto.producto SET stock = 5 WHERE id = 7;
+   INSERT INTO detalle_venta (Producto_id, Venta_id, cantidad, precio) 
+                    VALUES (7, 17, '5', 1.25e0);
+COMMIT;
