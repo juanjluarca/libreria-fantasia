@@ -14,7 +14,7 @@ class BaseDatos:
             cursorclass=cursors.DictCursor
         )
         self.conexion.autocommit(True)  # Habilitar autocommit para validar rollbacks
-        self.conexion.cursor.execute("SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ")  # Configurar nivel
+        self.conexion.cursor().execute("SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ")
 
     # =======================
     # MÉTODOS DE TRANSACCIONES
@@ -169,7 +169,6 @@ class BaseDatos:
         # Aumentar stock de producto
         with self.conexion.cursor() as cursor:
             cursor.execute("UPDATE modelo_proyecto.producto SET stock = stock + %s WHERE id = %s", (cantidad, id))
-        self.conexion.commit()
 
     def obtener_stock_producto(self, id):
         # Obtener stock actual de producto
@@ -195,7 +194,6 @@ class BaseDatos:
         # Confirmar orden de compra (cambiar estado)
         with self.conexion.cursor() as cursor:
             cursor.execute("UPDATE compra SET estado = %s, total_compra = %s WHERE id = %s", (1, total, id))
-        self.conexion.commit()
 
     def obtener_compras_pendientes(self):
         # Obtener compras pendientes (sin registrar en stock)
@@ -233,7 +231,6 @@ class BaseDatos:
     def modificar_detalle_compra(self, id, cantidad_recibida):
         with self.conexion.cursor() as cursor:
             cursor.callproc("ModificarDetalleCompra", (id, cantidad_recibida))
-        self.conexion.commit()
 
 
     # =======================
