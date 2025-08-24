@@ -1153,7 +1153,7 @@ class Ventana_compras(Codigo):
         fila = self.tabla_compras.currentRow()
         id_orden = int(self.tabla_compras.item(fila, 0).text())
         detalles = self.base_datos.obtener_detalle_compra(id_orden)
-        
+
         # Configurar tabla
         self.tabla_ingreso.clear()
         self.tabla_ingreso.setRowCount(0)
@@ -1205,7 +1205,7 @@ class Ventana_compras(Codigo):
         self.total.setPlaceholderText(f"Total del ingreso: Q{self.total_compra:.2f}")
         
 
-    def confirmar_ingreso(self):  
+    def confirmar_ingreso(self):
         try:
             # Recorrer la tabla_ingreso para obtener detalles del carrito
             # y actualizar el stock de cada orden
@@ -1216,6 +1216,9 @@ class Ventana_compras(Codigo):
 
 
             # Confirmación del ingreso del pedido, aquí debe ir una transacción
+
+            self.base_datos.iniciar_transaccion()
+
             for i in range(self.tabla_ingreso.rowCount()):
                 # Verificar que la cantidad sea igual a la cantidad recibida
                 id_detalle = int(self.tabla_ingreso.item(i, 0).text())
@@ -1242,14 +1245,13 @@ class Ventana_compras(Codigo):
                 id_producto = producto[0]
                 cantidad = producto[1]
                 # Actualizar el stock del producto
-
                 self.base_datos.aumentar_stock_producto(id_producto, cantidad)
 
             # Cambiar el estado de la orden a 1 (confirmada) y modificar el total si fue cambiado
             self.base_datos.confirmar_orden_compra(id_orden, total)
 
             # Aquí finaliza la transacción
-
+            self.base_datos.confirmar_transaccion()
 
             # Recargar la tabla de compras
             self.ordenes_compra()
@@ -1264,6 +1266,7 @@ class Ventana_compras(Codigo):
             self.fila_ingreso = 0
 
         except Exception as e:
+            self.base_datos.revertir_transaccion()
             self.mensaje_error("Error - Rollback Realizado", f"No se pudo registrar el ingreso: {str(e)}")
 
 
