@@ -14,7 +14,9 @@ class BaseDatos:
             cursorclass=cursors.DictCursor
         )
         self.conexion.autocommit(True)  # Habilitar autocommit para validar rollbacks
-        self.conexion.cursor().execute("SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ")
+
+        self.conexion.cursor().execute("SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ")  # Configurar nivel
+
 
     # =======================
     # MÉTODOS DE TRANSACCIONES
@@ -188,7 +190,6 @@ class BaseDatos:
                     VALUES (%s, %s, %s, %s)"""
             cursor.execute(sql, (proveedor_id, fecha, empleado_id, total_compra))
             return cursor.lastrowid
-        self.conexion.commit()
 
     def confirmar_orden_compra(self, id, total):
         # Confirmar orden de compra (cambiar estado)
@@ -216,7 +217,6 @@ class BaseDatos:
             sql = """INSERT INTO detalle_compra (Producto_id, Compra_id, cantidad, precio_unitario, cantidad_recibida) 
                     VALUES (%s, %s, %s, %s, %s)"""
             cursor.execute(sql, (producto_id, compra_id, cantidad, precio, cantidad_recibida))
-        self.conexion.commit()
 
     def obtener_detalle_compra(self, id):
         # Obtener detalle de una compra específica

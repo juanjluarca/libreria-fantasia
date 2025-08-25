@@ -747,13 +747,43 @@ class Ventana_compras(Codigo):
 
         # Generar la orden de compra
         try:
-            # Aquí debe iniciar una transacción
+            # Aquí debe iniciar una transacción 
+            self.base_datos.iniciar_transaccion()
+
+            with open("bitacora/bitacora_compras.txt", "a", encoding="utf-8") as log:log.write(
+                f"{datetime.now()} | AGREGAR COMPRA | START TRANSACTION | "
+                f"Proveedor={id_proveedor} | Usuario={self.id_usuario} | Total={self.total_compra}\n"
+            )
+
             id_compra = self.base_datos.agregar_compra(id_proveedor, datetime.now(), self.id_usuario, self.total_compra)
+
+            self.base_datos.confirmar_transaccion()
+
+            with open("bitacora/bitacora_compras.txt", "a", encoding="utf-8") as log:log.write(
+                f"{datetime.now()} | AGREGAR COMPRA | COMMIT | "
+                f"Proveedor={id_proveedor} | Usuario={self.id_usuario} | Total={self.total_compra}\n"
+            )
+
             for orden in self.carrito_ingreso:
                 id_orden = orden[0]
                 cantidad = orden[1]
                 precio_unitario = orden[2]
+                
+                self.base_datos.iniciar_transaccion()
+
+                with open("bitacora/bitacora_compras.txt", "a", encoding="utf-8") as log:log.write(
+                    f"{datetime.now()} | AGREGAR DETALLE COMPRA | START TRANSACTION | "
+                    f"ID_Orden={id_orden} | ID_Compra={id_compra} | Cantidad={cantidad} | Precio_Unitario={precio_unitario} | Usuario={self.id_usuario}\n"
+                )
+                
                 self.base_datos.agregar_detalle_compra(id_orden, id_compra, cantidad, precio_unitario, cantidad)
+
+                with open("bitacora/bitacora_compras.txt", "a", encoding="utf-8") as log:log.write(
+                    f"{datetime.now()} | AGREGAR DETALLE COMPRA | COMMIT | "
+                    f"ID_Orden={id_orden} | ID_Compra={id_compra} | Cantidad={cantidad} | Precio_Unitario={precio_unitario} | Usuario={self.id_usuario}\n"
+                )
+
+                self.base_datos.confirmar_transaccion()
             
             # Aquí se finaliza la transacción
 
@@ -767,6 +797,14 @@ class Ventana_compras(Codigo):
             self.fila_ingreso = 0
 
         except Exception as e:
+            self.base_datos.revertir_transaccion()
+
+            with open("bitacora/bitacora_compras.txt", "a", encoding="utf-8") as log:log.write(
+                f"{datetime.now()} | TRANSACCIÓN COMPRA | ROLLBACK | "
+                f"Proveedor={id_proveedor} | Usuario={self.id_usuario}\n"
+                )
+                    
+
             self.mensaje_error("Error", f"No se pudo generar la orden de compra: {str(e)}")
             return
         
