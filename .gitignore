@@ -3,3 +3,5 @@ __pycache__/
 venv/
 .idea/
 generar_backup_base.py
+bitacora/
+*.txt

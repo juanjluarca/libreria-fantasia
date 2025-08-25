@@ -1246,8 +1246,8 @@ class Ventana_compras(Codigo):
         
 
     def confirmar_ingreso(self):
-        with open(r"C:\Users\DELL\PycharmProjects\libreria-fantasia\bitacora_de_compras.txt", "a",
-                  encoding="utf-8") as archivo:
+        with open(r"./bitacora_de_compras.txt", "a",
+                    encoding="utf-8") as archivo:
             archivo.write("\n")
 
             texto_ingreso = "Transacción No: "
@@ -1275,8 +1275,8 @@ class Ventana_compras(Codigo):
                         pass
 
                     texto_ingreso += ("id detalle: " + str(id_detalle) + " | id producto: " + str(id_producto) +
-                                      " | Precio U " + str(precio_unitario) + " | Cantidad: " +
-                                      str(cantidad_recibida) + "\n")
+                                        " | Precio U " + str(precio_unitario) + " | Cantidad: " +
+                                        str(cantidad_recibida) + "\n")
 
                     if cantidad_recibida != cantidad:
                         # Modificar el detalle de la orden en bd
