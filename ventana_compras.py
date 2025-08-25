@@ -1246,7 +1246,7 @@ class Ventana_compras(Codigo):
         
 
     def confirmar_ingreso(self):
-        with open(r"./bitacora_de_compras.txt", "a",
+        with open(r"bitacora/bitacora_de_compras.txt", "a",
                     encoding="utf-8") as archivo:
             archivo.write("\n")
 

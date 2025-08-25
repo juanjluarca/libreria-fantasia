@@ -7,7 +7,7 @@ class BaseDatos:
             # host="192.168.250.103",
             # user='pancho',
             # password='Pancho123?',
-            host="localhost",
+            host="10.18.37.103",
             user=user,
             password=password,
             database="modelo_proyecto",

@@ -418,7 +418,7 @@ class Ventana_ventas(Codigo):
         self.escribir_transacciones(db_actions)
 
     def escribir_transacciones(self, transaction: str):
-        with open("executed_transactions_ventas.txt", "a", encoding="utf-8") as f:
+        with open("bitacora/executed_transactions_ventas.txt", "a", encoding="utf-8") as f:
             f.write(transaction)
 
     def llenar_inventario(self):

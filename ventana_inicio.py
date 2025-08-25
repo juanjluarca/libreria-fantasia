@@ -91,7 +91,7 @@ class Ventana_inicio(Codigo):
         try:
 
 
-            base_datos = BaseDatos('root', 'admin')
+            base_datos = BaseDatos('carlos', 'carlos123')
 
 
             # Cambio principal: PyMySQL no tiene is_connected(), verificamos con ping()
