@@ -14,7 +14,9 @@ class BaseDatos:
             cursorclass=cursors.DictCursor
         )
         self.conexion.autocommit(True)  # Habilitar autocommit para validar rollbacks
+
         self.conexion.cursor().execute("SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ")  # Configurar nivel
+
 
     # =======================
     # MÉTODOS DE TRANSACCIONES
@@ -172,7 +174,6 @@ class BaseDatos:
         # Aumentar stock de producto
         with self.conexion.cursor() as cursor:
             cursor.execute("UPDATE modelo_proyecto.producto SET stock = stock + %s WHERE id = %s", (cantidad, id))
-        self.conexion.commit()
 
     def obtener_stock_producto(self, id):
         # Obtener stock actual de producto
@@ -192,13 +193,11 @@ class BaseDatos:
                     VALUES (%s, %s, %s, %s)"""
             cursor.execute(sql, (proveedor_id, fecha, empleado_id, total_compra))
             return cursor.lastrowid
-        self.conexion.commit()
 
     def confirmar_orden_compra(self, id, total):
         # Confirmar orden de compra (cambiar estado)
         with self.conexion.cursor() as cursor:
             cursor.execute("UPDATE compra SET estado = %s, total_compra = %s WHERE id = %s", (1, total, id))
-        self.conexion.commit()
 
     def obtener_compras_pendientes(self):
         # Obtener compras pendientes (sin registrar en stock)
@@ -221,7 +220,6 @@ class BaseDatos:
             sql = """INSERT INTO detalle_compra (Producto_id, Compra_id, cantidad, precio_unitario, cantidad_recibida) 
                     VALUES (%s, %s, %s, %s, %s)"""
             cursor.execute(sql, (producto_id, compra_id, cantidad, precio, cantidad_recibida))
-        self.conexion.commit()
 
     def obtener_detalle_compra(self, id):
         # Obtener detalle de una compra específica
@@ -236,7 +234,6 @@ class BaseDatos:
     def modificar_detalle_compra(self, id, cantidad_recibida):
         with self.conexion.cursor() as cursor:
             cursor.callproc("ModificarDetalleCompra", (id, cantidad_recibida))
-        self.conexion.commit()
 
 
     # =======================
@@ -615,5 +612,10 @@ class BaseDatos:
                             ORDER BY 
                                 c.fecha DESC""", (fecha_inicio, fecha_fin))
             return cursor.fetchall()
-        
-        
+
+
+    def obtener_maximo_id_compras(self):
+        with self.conexion.cursor() as cursor:
+            cursor.execute("SELECT COALESCE(MAX(ID), 0) AS ultimo_id FROM COMPRA;")
+            resultado = cursor.fetchone()
+            return resultado["ultimo_id"]
