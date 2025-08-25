@@ -1,0 +1,15 @@
+
+Transacción No: 27
+ ------------------------------- 
+id detalle: 51 | id producto: 12 | Precio U 127.5 | Cantidad: 3
+id detalle: 52 | id producto: 15 | Precio U 4.25 | Cantidad: 1
+total= 386.75
+transacción confirmada
+---------------------------------
+Transacción No: 28
+ ------------------------------- 
+id detalle: 53 | id producto: 10 | Precio U 8.5 | Cantidad: 34
+id detalle: 54 | id producto: 14 | Precio U 170.0 | Cantidad: 1
+id detalle: 55 | id producto: 6 | Precio U 68.0 | Cantidad: 2
+total= 595.0
+transacción confirmada  ------------------------------- 
