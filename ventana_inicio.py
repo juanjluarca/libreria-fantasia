@@ -90,6 +90,7 @@ class Ventana_inicio(Codigo):
 
         try:
 
+
             base_datos = BaseDatos('root', 'admin')
 
 
@@ -139,12 +140,14 @@ class Ventana_inicio(Codigo):
                                 f"No se pudo conectar a la base de datos:\n{error_msg}")
             self.ingreso_usuario.clear()
             self.ingreso_contrasenia.clear()
+        """
         except Exception as e:
             print(f"Error inesperado: {str(e)}")
             self.mensaje_error("Error",
                                 f"Ocurrió un error inesperado:\n{str(e)}")
             self.ingreso_usuario.clear()
             self.ingreso_contrasenia.clear()
+        """
 
 
     def cerrar_programa(self):

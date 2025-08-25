@@ -375,19 +375,31 @@ class Ventana_ventas(Codigo):
 
     def confirmar_venta(self):
         # Primero confirmar la venta en la base de datos
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        db_actions = f"\n\nConfirmación de venta ({now}):\n\n"
         try:
 
             # Aquí debe iniciar una transacción
-            self.base_datos.agregar_venta(self.id_usuario, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self.total_venta)
-            id_venta = self.base_datos.obtener_id_ultima_venta()
+            self.base_datos.iniciar_transaccion()
+            db_actions += "START TRANSACTION;\n"
+
+            db_actions += self.base_datos.agregar_venta(self.id_usuario, now, self.total_venta)
+            tupp = self.base_datos.obtener_id_ultima_venta()
+            id_venta = tupp[0]
+            db_actions += tupp[1] + ";\n"
             
             for producto in self.carrito:
                 id_producto = producto[0]
                 nuevo_stock = producto[1]
                 stock_venta = producto[2]
                 precio = producto[3]
-                self.base_datos.modificar_producto_stock(id_producto, nuevo_stock)
-                self.base_datos.agregar_detalle_venta(id_producto, id_venta, stock_venta, precio)
+                db_actions += self.base_datos.modificar_producto_stock(id_producto, nuevo_stock)
+                db_actions += self.base_datos.agregar_detalle_venta(id_producto, id_venta, stock_venta, precio)
+
+            #raise Exception("Prueba de rollback")  # Línea para probar el rollback, eliminar en producción
+
+            self.base_datos.confirmar_transaccion()
+            db_actions += "COMMIT;"
             # Aquí finaliza la transacción
             
             self.tabla2.clearContents()
@@ -399,10 +411,15 @@ class Ventana_ventas(Codigo):
             self.fila_carrito = 0
             self.total_venta = 0   
         except Exception as e:
+            self.base_datos.revertir_transaccion()
+            db_actions += "ROLLBACK;"
             self.mensaje_error("Error - Rollback realizado", f"No se pudo registrar el ingreso: {str(e)}")
+        
+        self.escribir_transacciones(db_actions)
 
-
-
+    def escribir_transacciones(self, transaction: str):
+        with open("executed_transactions_ventas.txt", "a", encoding="utf-8") as f:
+            f.write(transaction)
 
     def llenar_inventario(self):
         # Volver a cargar la tabla de ventas con los productos originales

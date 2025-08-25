@@ -1,11 +1,11 @@
 import mysql.connector
 
-# Conexión sin base de datos
-db = mysql.connector.connect(
-    host="127.0.0.1",
-    user="root",
-    password="120365"
-)
+
+# Configuración de la base de datos
+db_host = 'localhost'
+db_user = 'root' # Aquí se coloca el usuario de tu base de datos
+db_password = '2025000' # Aquí se coloca la contraseña de la base de datos
+db_name = 'modelo_proyecto'
 
 cursor = db.cursor()
 

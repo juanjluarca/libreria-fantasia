@@ -156,11 +156,14 @@ class BaseDatos:
         self.conexion.commit()
 
     def modificar_producto_stock(self, id, stock):
+        text = ""
         # Modificar stock del producto
         with self.conexion.cursor() as cursor:
-            cursor.execute("UPDATE producto SET stock = %s WHERE id = %s", (stock, id))
-        self.conexion.commit()
-
+            query = "UPDATE modelo_proyecto.producto SET stock = %s WHERE id = %s"
+            cursor.execute(query, (stock, id))
+            text += "   " + cursor.mogrify(query, (stock, id)) + ";\n"
+        return text
+        
     def modificar_stock_producto(self, id, stock):
         # Otra variante para modificar stock
         with self.conexion.cursor() as cursor:
@@ -239,26 +242,33 @@ class BaseDatos:
 
     def agregar_venta(self, empleado_id, fecha, total_venta):
         # Registrar venta
+        text = ""
         with self.conexion.cursor() as cursor:
             sql = """INSERT INTO venta (Empleado_id, fecha, total_venta) 
                     VALUES (%s, %s, %s)"""
             cursor.execute(sql, (empleado_id, fecha, total_venta))
-        self.conexion.commit()
+            query = cursor.mogrify(sql, (empleado_id, fecha, total_venta))
+            text += "   " + query + ";\n"
+        return text
 
     def agregar_detalle_venta(self, producto_id, venta_id, cantidad, precio):
         # Agregar detalle a la venta
+        text = ""
         with self.conexion.cursor() as cursor:
             sql = """INSERT INTO detalle_venta (Producto_id, Venta_id, cantidad, precio) 
                     VALUES (%s, %s, %s, %s)"""
             cursor.execute(sql, (producto_id, venta_id, cantidad, precio))
-        self.conexion.commit()
+            query = cursor.mogrify(sql, (producto_id, venta_id, cantidad, precio))
+            text += "   " + query + ";\n"
+        return text
 
     def obtener_id_ultima_venta(self):
         # Obtener el ID de la última venta registrada
         with self.conexion.cursor() as cursor:
-            cursor.execute("SELECT id FROM venta ORDER BY id DESC LIMIT 1")
+            query = "SELECT MAX(id) AS id FROM venta"
+            cursor.execute(query)
             resultado = cursor.fetchone()
-            return resultado['id'] if resultado else None
+            return (resultado['id'], "  " + query) if resultado else None
 
     # =======================
     # MÉTODOS DE PROVEEDORES
