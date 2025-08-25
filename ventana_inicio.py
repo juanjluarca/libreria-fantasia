@@ -89,7 +89,7 @@ class Ventana_inicio(Codigo):
         password = self.ingreso_contrasenia.text()
 
         try:
-            base_datos = BaseDatos('root', 'admin')
+            base_datos = BaseDatos('root', '120365')
 
             # Cambio principal: PyMySQL no tiene is_connected(), verificamos con ping()
             if base_datos.conexion and base_datos.conexion.open:

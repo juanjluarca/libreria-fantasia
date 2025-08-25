@@ -1011,7 +1011,9 @@ class Ventana_compras(Codigo):
 
 
     # Esta tabla servirá para ver las ordenes de compra, y los detalles de cada una. Servirá para confirmar el ingreso
-    def ordenes_compra(self): 
+    def ordenes_compra(self):
+        self.base_datos.revertir_transaccion()
+        self.base_datos.iniciar_transaccion()
         self.limpieza_layout(self.layout3)
         self.color_boton_oprimido(self.boton_ordenes)
         self.color_boton_sin_oprimir(self.boton_pedido)
@@ -1206,68 +1208,81 @@ class Ventana_compras(Codigo):
         
 
     def confirmar_ingreso(self):
-        try:
-            # Recorrer la tabla_ingreso para obtener detalles del carrito
-            # y actualizar el stock de cada orden
-            fila = self.tabla_compras.currentRow()
-            id_orden = int(self.tabla_compras.item(fila, 0).text())
-            texto = self.tabla_compras.item(fila, 3).text()
-            total = float(texto[1:].strip())
+        with open(r"C:\Users\DELL\PycharmProjects\libreria-fantasia\bitacora_de_compras.txt", "a",
+                  encoding="utf-8") as archivo:
+            archivo.write("\n")
 
+            texto_ingreso = "Transacción No: "
+            id_compra_ventana = self.base_datos.obtener_maximo_id_compras()
+            texto_ingreso += str(id_compra_ventana) + "\n"
+            texto_ingreso += " ------------------------------- " + "\n"
+            try:
+                # Recorrer la tabla_ingreso para obtener detalles del carrito
+                # y actualizar el stock de cada orden
+                fila = self.tabla_compras.currentRow()
+                id_orden = int(self.tabla_compras.item(fila, 0).text())
+                texto = self.tabla_compras.item(fila, 3).text()
+                total = float(texto[1:].strip())
 
-            # Confirmación del ingreso del pedido, aquí debe ir una transacción
+                for i in range(self.tabla_ingreso.rowCount()):
+                    # Verificar que la cantidad sea igual a la cantidad recibida
+                    id_detalle = int(self.tabla_ingreso.item(i, 0).text())
+                    id_producto = int(self.tabla_ingreso.item(i, 1).text())
+                    precio_unitario = float(self.tabla_ingreso.item(i, 3).text()[1:])
+                    cantidad = int(self.tabla_ingreso.item(i, 4).text())
+                    cantidad_recibida = self.tabla_ingreso.item(i, 5).text()
+                    try:
+                        cantidad_recibida = int(cantidad_recibida)
+                    except:
+                        pass
 
-            self.base_datos.iniciar_transaccion()
+                    texto_ingreso += ("id detalle: " + str(id_detalle) + " | id producto: " + str(id_producto) +
+                                      " | Precio U " + str(precio_unitario) + " | Cantidad: " +
+                                      str(cantidad_recibida) + "\n")
 
-            for i in range(self.tabla_ingreso.rowCount()):
-                # Verificar que la cantidad sea igual a la cantidad recibida
-                id_detalle = int(self.tabla_ingreso.item(i, 0).text())
-                id_producto = int(self.tabla_ingreso.item(i, 1).text())
-                precio_unitario = float(self.tabla_ingreso.item(i, 3).text()[1:])
-                cantidad = int(self.tabla_ingreso.item(i, 4).text())
-                cantidad_recibida = self.tabla_ingreso.item(i, 5).text()
-                try:
-                    cantidad_recibida = int(cantidad_recibida)
-                except:
-                    pass
+                    if cantidad_recibida != cantidad:
+                        # Modificar el detalle de la orden en bd
+                        print("llegó aquí")
+                        self.base_datos.modificar_detalle_compra(id_detalle, cantidad_recibida)
+                        print("Aquí también")
+                        total -= precio_unitario * (int(cantidad) - int(cantidad_recibida))
+                    # Agregar al carrito de ingreso
 
-                if cantidad_recibida != cantidad:
-                    # Modificar el detalle de la orden en bd
-                    print("llegó aquí")
-                    self.base_datos.modificar_detalle_compra(id_detalle, cantidad_recibida)
-                    print("Aquí también")
-                    total -= precio_unitario * (int(cantidad) - int(cantidad_recibida))
-                # Agregar al carrito de ingreso
+                    self.carrito_ingreso.append([id_producto, cantidad_recibida, precio_unitario, id_detalle])
 
-                self.carrito_ingreso.append([id_producto, cantidad_recibida, precio_unitario, id_detalle])
+                for producto in self.carrito_ingreso:
+                    id_producto = producto[0]
+                    cantidad = producto[1]
+                    # Actualizar el stock del producto
+                    self.base_datos.aumentar_stock_producto(id_producto, cantidad)
 
-            for producto in self.carrito_ingreso:
-                id_producto = producto[0]
-                cantidad = producto[1]
-                # Actualizar el stock del producto
-                self.base_datos.aumentar_stock_producto(id_producto, cantidad)
+                texto_ingreso += "total= "  + str(total) + "\n"
+                # Cambiar el estado de la orden a 1 (confirmada) y modificar el total si fue cambiado
+                self.base_datos.confirmar_orden_compra(id_orden, total)
 
-            # Cambiar el estado de la orden a 1 (confirmada) y modificar el total si fue cambiado
-            self.base_datos.confirmar_orden_compra(id_orden, total)
+                # Aquí finaliza la transacción
+                self.base_datos.confirmar_transaccion()
+                texto_ingreso += "transacción confirmada "
+                texto_ingreso += " ------------------------------- " + "\n"
 
-            # Aquí finaliza la transacción
-            self.base_datos.confirmar_transaccion()
+                archivo.write(texto_ingreso)
+                # Recargar la tabla de compras
+                self.ordenes_compra()
+                # Limpiar la tabla de ingreso
+                self.tabla_ingreso.clearContents()
+                self.tabla_ingreso.setRowCount(0)
+                self.tabla_ingreso.setColumnCount(4)
+                self.total.clear()
+                self.total.setPlaceholderText("Total del ingreso: Q0")
+                self.carrito_ingreso.clear()
+                self.total_compra = 0
+                self.fila_ingreso = 0
 
-            # Recargar la tabla de compras
-            self.ordenes_compra()
-            # Limpiar la tabla de ingreso
-            self.tabla_ingreso.clearContents()
-            self.tabla_ingreso.setRowCount(0)
-            self.tabla_ingreso.setColumnCount(4)
-            self.total.clear()
-            self.total.setPlaceholderText("Total del ingreso: Q0")
-            self.carrito_ingreso.clear()
-            self.total_compra = 0
-            self.fila_ingreso = 0
+            except Exception as e:
+                self.base_datos.revertir_transaccion()
+                texto_ingreso += "RollBack"
 
-        except Exception as e:
-            self.base_datos.revertir_transaccion()
-            self.mensaje_error("Error - Rollback Realizado", f"No se pudo registrar el ingreso: {str(e)}")
+                self.mensaje_error("Error - Rollback Realizado", f"No se pudo registrar el ingreso: {str(e)}")
 
 
 
@@ -1280,4 +1295,4 @@ class Ventana_compras(Codigo):
         self.carrito_ingreso.clear()
         self.total_compra = 0
         self.fila_ingreso = 0
-
+        self.base_datos.revertir_transaccion()

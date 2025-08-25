@@ -602,5 +602,10 @@ class BaseDatos:
                             ORDER BY 
                                 c.fecha DESC""", (fecha_inicio, fecha_fin))
             return cursor.fetchall()
-        
-        
+
+
+    def obtener_maximo_id_compras(self):
+        with self.conexion.cursor() as cursor:
+            cursor.execute("SELECT COALESCE(MAX(ID), 0) AS ultimo_id FROM COMPRA;")
+            resultado = cursor.fetchone()
+            return resultado["ultimo_id"]
