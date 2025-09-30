@@ -1,34 +1,20 @@
-import mysql.connector
-
+import subprocess
 
 # Configuración de la base de datos
 db_host = 'localhost'
 db_user = 'root' # Aquí se coloca el usuario de tu base de datos
-db_password = '2025000' # Aquí se coloca la contraseña de la base de datos
+db_password = 'admin' # Aquí se coloca la contraseña de la base de datos
 db_name = 'modelo_proyecto'
 
-cursor = db.cursor()
+# Ruta del archivo SQL
+backup_file = 'modelo_proyecto.sql'
 
-# Crear la base de datos si no existe
-cursor.execute("CREATE DATABASE IF NOT EXISTS parte2")
-cursor.execute("USE parte2")
+# Comando para importar usando mysql CLI
+command = f"mysql -h {db_host} -u {db_user} -p{db_password} {db_name} < {backup_file}"
 
-# Leer el archivo SQL
-with open(r"C:\Users\DELL\PycharmProjects\libreria-fantasia\modelo_proyecto.sql", "r", encoding="utf-8", errors="ignore") as f:
-    sql_script = f.read()
-
-# Ejecutar cada sentencia por separado
-statements = sql_script.split(';')
-for statement in statements:
-    stmt = statement.strip()
-    if stmt:  # Ignorar líneas vacías
-        try:
-            cursor.execute(stmt)
-        except mysql.connector.Error as err:
-            print(f"Error ejecutando la sentencia: {err}")
-
-db.commit()
-cursor.close()
-db.close()
-
-print("Backup importado correctamente.")
+# Ejecutar el comando
+try:
+    subprocess.run(command, shell=True, check=True)
+    print("Backup importado correctamente.")
+except subprocess.CalledProcessError as e:
+    print("Error al importar el backup:", e)

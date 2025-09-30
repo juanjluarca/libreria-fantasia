@@ -1,12 +1,14 @@
 import pymysql
 from pymysql import cursors
 
+# host="192.168.250.103",
+# user='pancho',
+# password='Pancho123?',
+
 class BaseDatos:
     def __init__(self, user, password):
         self.conexion = pymysql.connect(
-            # host="192.168.250.103",
-            # user='pancho',
-            # password='Pancho123?',
+            
             host="localhost",
             user=user,
             password=password,
@@ -124,7 +126,7 @@ class BaseDatos:
                             FROM modelo_proyecto.producto WHERE estado = 1""")
             return cursor.fetchall()
 
-    def buscar_producto_por_nombre(self, nombre):
+    def buscar_producto_por_nombre(self, nombre): # Correción, indexar el nombre del producto y quitar LIKE
         # Buscar productos para administración
         with self.conexion.cursor() as cursor:
             cursor.execute("""SELECT id, nombre, stock, precio, descripcion, costo, stock_minimo 
@@ -132,7 +134,7 @@ class BaseDatos:
                             WHERE nombre LIKE %s AND estado = 1""", (f"%{nombre}%",))
             return cursor.fetchall()
 
-    def buscar_producto_ventas_por_nombre(self, nombre):
+    def buscar_producto_ventas_por_nombre(self, nombre): # Correción, indexar el nombre del producto y quitar LIKE
         # Buscar productos para ventas
         with self.conexion.cursor() as cursor:
             cursor.execute("""SELECT id, nombre, descripcion, stock, precio 
@@ -199,12 +201,12 @@ class BaseDatos:
         with self.conexion.cursor() as cursor:
             cursor.execute("UPDATE compra SET estado = %s, total_compra = %s WHERE id = %s", (1, total, id))
 
-    def obtener_compras_pendientes(self):
+    def obtener_compras_pendientes(self): # Corrección: cambiar orden de inner join
         # Obtener compras pendientes (sin registrar en stock)
         with self.conexion.cursor() as cursor:
             cursor.execute("""SELECT c.id as IdCompra, p.nombre as Proveedor, c.fecha as Fecha, c.total_compra as Total 
-                            FROM compra c
-                            JOIN proveedor p ON c.Proveedor_id = p.id
+                            FROM proveedor p
+                            JOIN compra c ON c.Proveedor_id = p.id
                             WHERE c.estado = 0 ORDER BY c.fecha DESC""")
             return cursor.fetchall()
         
@@ -221,13 +223,13 @@ class BaseDatos:
                     VALUES (%s, %s, %s, %s, %s)"""
             cursor.execute(sql, (producto_id, compra_id, cantidad, precio, cantidad_recibida))
 
-    def obtener_detalle_compra(self, id):
+    def obtener_detalle_compra(self, id): # Corrección: cambiar orden de inner join
         # Obtener detalle de una compra específica
         with self.conexion.cursor() as cursor:
             cursor.execute("""SELECT dc.id as ID, dc.Producto_id as IdProducto, p.nombre as NombreProducto, 
                                     dc.precio_unitario as PrecioUnitario, dc.cantidad as Cantidad, dc.cantidad_recibida as CantidadRecibida
-                            FROM detalle_compra dc
-                            JOIN producto p ON dc.Producto_id = p.id
+                            FROM producto p
+                            JOIN detalle_compra dc ON dc.Producto_id = p.id
                             WHERE dc.Compra_id = %s""", (id,))
             return cursor.fetchall()
 
@@ -313,7 +315,7 @@ class BaseDatos:
     # =======================
     # MÉTODOS DE REPORTES
         # =======================
-    def obtener_reporte_ventas_por_producto(self, fecha_inicio, fecha_fin):
+    def obtener_reporte_ventas_por_producto(self, fecha_inicio, fecha_fin): # Corrección: buscar alternativa a DATE(v.fecha) en el where
         """
         Devuelve una lista de productos vendidos entre dos fechas con su cantidad total y total generado.
         """
@@ -336,9 +338,10 @@ class BaseDatos:
             """, (fecha_inicio, fecha_fin))
 
         return cursor.fetchall()
+    
     def obtener_ventas_dia(self, fecha): # Devolver IdVenta, Producto, Cantidad, Precio
         # Obtener los productos vendidos en un día
-        with self.conexion.cursor() as cursor:
+        with self.conexion.cursor() as cursor: # Corrección: buscar alternativa a DATE(v.fecha) en el where
             cursor.execute("""SELECT 
                                 p.id AS IdVenta, 
                                 p.nombre AS Producto, 
@@ -358,7 +361,7 @@ class BaseDatos:
         
     def obtener_ventas_mes(self, fecha):  # fecha esperada: 'YYYY-MM'
         # Obtener los productos vendidos en un mes
-        with self.conexion.cursor() as cursor:
+        with self.conexion.cursor() as cursor: # Corrección: buscar alternativa a DATE(v.fecha) en el where
             cursor.execute("""
                 SELECT 
                     p.id AS IdVenta, 
@@ -378,7 +381,7 @@ class BaseDatos:
 
 
     def obtener_reporte_ventas(self): # Devolver IdVenta, Empleado, Fecha, Total
-        with self.conexion.cursor() as cursor:
+        with self.conexion.cursor() as cursor: # Corrección: orden de inner join
             cursor.execute("""select 
                                 v.id as IdVenta, 
                                 e.nombre as Empleado, 
@@ -393,7 +396,7 @@ class BaseDatos:
         
     def obtener_detalles_por_id_venta(self, id_venta): # Devolver IdOrden, Producto, CantidadVendida, Total 
         # Obtener detalles de una venta específica
-        with self.conexion.cursor() as cursor:
+        with self.conexion.cursor() as cursor: # Corrección: orden de inner join
             cursor.execute("""SELECT 
                                 dv.id AS IdOrden, 
                                 p.nombre AS Producto, 
@@ -412,7 +415,7 @@ class BaseDatos:
 
     def obtener_reporte_ventas_por_fecha(self, fecha_inicio, fecha_fin): # Devuelve Fecha, IngresoTotal, ProductosVendidos, Ganancia
         # Obtener reporte de ventas por fecha
-        with self.conexion.cursor() as cursor:
+        with self.conexion.cursor() as cursor: # Corrección: orden de inner join y DATE(v.fecha)
             cursor.execute("""SELECT 
                                 DATE(v.fecha) AS Fecha,
                                 SUM(v.total_venta) AS IngresoTotal,
@@ -505,7 +508,7 @@ class BaseDatos:
 
     def obtener_compras(self): # Devuelve IdCompra, Proveedor, Empleado, FechaCompra, Total
         # Obtener compras
-        with self.conexion.cursor() as cursor:
+        with self.conexion.cursor() as cursor: # Corrección: orden de inner join
             cursor.execute("""SELECT 
                                 c.id AS IdCompra, 
                                 p.nombre AS Proveedor, 
@@ -524,7 +527,7 @@ class BaseDatos:
 
     def obtener_detalles_por_id_compra(self, id_compra): # Devuelve IdOrden, Producto, CantidadRecibida, Total
         # Obtener detalles de una compra específica
-        with self.conexion.cursor() as cursor:
+        with self.conexion.cursor() as cursor: # Corrección: orden de inner join 
             cursor.execute("""SELECT 
                                 dc.id AS IdOrden, 
                                 p.nombre AS Producto, 
