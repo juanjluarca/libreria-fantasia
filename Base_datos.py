@@ -205,8 +205,8 @@ class BaseDatos:
         # Obtener compras pendientes (sin registrar en stock)
         with self.conexion.cursor() as cursor:
             cursor.execute("""SELECT c.id as IdCompra, p.nombre as Proveedor, c.fecha as Fecha, c.total_compra as Total 
-                            FROM proveedor p
-                            JOIN compra c ON c.Proveedor_id = p.id
+                            FROM compra c
+                            JOIN proveedor p ON p.id = c.Proveedor_id
                             WHERE c.estado = 0 ORDER BY c.fecha DESC""")
             return cursor.fetchall()
         
@@ -332,7 +332,7 @@ class BaseDatos:
                     INNER JOIN detalle_venta dv ON v.id = dv.Venta_id
                     INNER JOIN producto p ON p.id = dv.Producto_id
                 WHERE 
-                    DATE(v.fecha) BETWEEN %s AND %s
+                    v.fecha >= %s AND v.fecha < %s
                 GROUP BY p.id
                 ORDER BY CantidadVendida DESC
             """, (fecha_inicio, fecha_fin))
@@ -352,7 +352,7 @@ class BaseDatos:
                                 INNER JOIN detalle_venta dv ON v.id = dv.Venta_id
                                 INNER JOIN producto p ON p.id = dv.Producto_id
                             WHERE 
-                                DATE(v.fecha) = %s
+                                v.fecha = %s
                             group by p.id
                             order by sum(dv.cantidad) desc
                             """, (fecha,))
