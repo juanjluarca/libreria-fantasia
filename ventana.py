@@ -515,8 +515,9 @@ class Ventana:
         # Buscar el producto por nombre en la base de datos
         nombre_producto = self.ingreso_busqueda.text()
         resultado = self.base_datos.buscar_producto_por_nombre(nombre_producto)
+        print("buscar_producto_por_nombre ")
         print(resultado)
-        
+
         if resultado != []:
             # Limpiar la tabla antes de mostrar los resultados
             self.tabla.clearContents()

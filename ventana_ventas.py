@@ -462,7 +462,7 @@ class Ventana_ventas(Codigo):
         # Buscar el producto por nombre en la base de datos
         nombre_producto = self.ingreso_busqueda.text()
         resultado = self.base_datos.buscar_producto_ventas_por_nombre(nombre_producto)
-        
+        print("buscar_producto_ventas_por_nombre -> modulo ventas")
         if len(resultado) != 0:
             # Limpiar la tabla antes de mostrar los resultados
             self.tabla1.clearContents()

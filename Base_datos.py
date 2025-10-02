@@ -10,8 +10,8 @@ class BaseDatos:
         self.conexion = pymysql.connect(
             
             host="localhost",
-            user=user,
-            password=password,
+            user="root",
+            password="120365",
             database="modelo_proyecto",
             cursorclass=cursors.DictCursor
         )
@@ -128,19 +128,28 @@ class BaseDatos:
 
     def buscar_producto_por_nombre(self, nombre): # Correción, indexar el nombre del producto y quitar LIKE
         # Buscar productos para administración
+        print("aqui toy")
         with self.conexion.cursor() as cursor:
-            cursor.execute("""SELECT id, nombre, stock, precio, descripcion, costo, stock_minimo 
-                            FROM modelo_proyecto.producto 
-                            WHERE nombre LIKE %s AND estado = 1""", (f"%{nombre}%",))
+            cursor.execute("""
+                SELECT id, nombre, stock, precio, descripcion, costo, stock_minimo
+                FROM modelo_proyecto.producto
+                WHERE nombre = %s AND estado = 1
+            """, (nombre,))
             return cursor.fetchall()
 
-    def buscar_producto_ventas_por_nombre(self, nombre): # Correción, indexar el nombre del producto y quitar LIKE
-        # Buscar productos para ventas
+
+    def buscar_producto_ventas_por_nombre(self, nombre):
+        # Buscar productos para ventas (con índice en 'nombre')
+        print("este tambien ya se arreglo")
         with self.conexion.cursor() as cursor:
-            cursor.execute("""SELECT id, nombre, descripcion, stock, precio 
-                            FROM modelo_proyecto.producto 
-                            WHERE nombre LIKE %s AND estado = 1""", (f"%{nombre}%",))
+            cursor.execute("""
+                SELECT id, nombre, descripcion, stock, precio
+                FROM modelo_proyecto.producto
+                WHERE estado = 1
+                  AND nombre = %s
+            """, (nombre,))
             return cursor.fetchall()
+
 
     def modificar_producto(self, id, nombre, precio, descripcion, existencia_minima):
         # Modificar datos de producto
