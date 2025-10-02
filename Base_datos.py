@@ -381,15 +381,15 @@ class BaseDatos:
 
 
     def obtener_reporte_ventas(self): # Devolver IdVenta, Empleado, Fecha, Total
-        with self.conexion.cursor() as cursor: # Corrección: orden de inner join
+        with self.conexion.cursor() as cursor:
             cursor.execute("""select 
                                 v.id as IdVenta, 
                                 e.nombre as Empleado, 
                                 v.fecha as Fecha, 
                                 v.total_venta as Total 
                             from 
-                                empleado e 
-                                inner join venta v on e.id = v.Empleado_id 
+                                venta v 
+                                inner join empleado e on e.id = v.Empleado_id 
                             group by v.id
                             order by v.fecha desc""")
             return cursor.fetchall()
@@ -403,8 +403,8 @@ class BaseDatos:
                                 dv.cantidad AS CantidadVendida, 
                                 dv.precio AS Total
                             FROM 
-                                venta v
-                                INNER JOIN detalle_venta dv ON v.id = dv.Venta_id
+                                detalle_venta dv
+                                INNER JOIN venta v ON v.id = dv.Venta_id
                                 INNER JOIN producto p ON p.id = dv.Producto_id
                             WHERE 
                                 v.id = %s
@@ -516,8 +516,8 @@ class BaseDatos:
                                 c.fecha AS FechaCompra, 
                                 c.total_compra AS Total
                             FROM 
-                                proveedor p
-                                INNER JOIN compra c ON p.id = c.Proveedor_id
+                                compra c
+                                INNER JOIN proveedor p ON p.id = c.Proveedor_id
                                 INNER JOIN empleado e ON e.id = c.Empleado_id
                             WHERE
                                 c.estado = 1
@@ -534,8 +534,8 @@ class BaseDatos:
                                 dc.cantidad_recibida AS CantidadRecibida, 
                                 dc.precio_unitario * dc.cantidad_recibida AS Total
                             FROM 
-                                compra c
-                                INNER JOIN detalle_compra dc ON c.id = dc.Compra_id
+                                detalle_compra dc
+                                INNER JOIN compra c ON c.id = dc.Compra_id
                                 INNER JOIN producto p ON p.id = dc.Producto_id
                             WHERE 
                                 c.id = %s""", (id_compra,))
