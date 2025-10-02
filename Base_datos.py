@@ -231,16 +231,27 @@ class BaseDatos:
             sql = """INSERT INTO detalle_compra (Producto_id, Compra_id, cantidad, precio_unitario, cantidad_recibida) 
                     VALUES (%s, %s, %s, %s, %s)"""
             cursor.execute(sql, (producto_id, compra_id, cantidad, precio, cantidad_recibida))
-
-    def obtener_detalle_compra(self, id): # Corrección: cambiar orden de inner join
-        # Obtener detalle de una compra específica
+    
+    def obtener_detalle_compra(self, id):  # Corrección: cambiar orden de inner join
+    # Obtener detalle de una compra específica
         with self.conexion.cursor() as cursor:
-            cursor.execute("""SELECT dc.id as ID, dc.Producto_id as IdProducto, p.nombre as NombreProducto, 
-                                    dc.precio_unitario as PrecioUnitario, dc.cantidad as Cantidad, dc.cantidad_recibida as CantidadRecibida
-                            FROM producto p
-                            JOIN detalle_compra dc ON dc.Producto_id = p.id
-                            WHERE dc.Compra_id = %s""", (id,))
-            return cursor.fetchall()
+            cursor.execute("""
+                SELECT 
+                    dc.id AS ID, 
+                    dc.Producto_id AS IdProducto, 
+                    p.nombre AS NombreProducto, 
+                    dc.precio_unitario AS PrecioUnitario, 
+                    dc.cantidad AS Cantidad, 
+                    dc.cantidad_recibida AS CantidadRecibida
+                FROM 
+                    producto p
+                    INNER JOIN detalle_compra dc ON p.id = dc.Producto_id
+                WHERE 
+                    dc.Compra_id = %s
+            """, (id,))
+        return cursor.fetchall()
+
+
 
     def modificar_detalle_compra(self, id, cantidad_recibida):
         with self.conexion.cursor() as cursor:
@@ -348,45 +359,49 @@ class BaseDatos:
 
         return cursor.fetchall()
     
-    def obtener_ventas_dia(self, fecha): # Devolver IdVenta, Producto, Cantidad, Precio
-        # Obtener los productos vendidos en un día
-        with self.conexion.cursor() as cursor: # Corrección: buscar alternativa a DATE(v.fecha) en el where
-            cursor.execute("""SELECT 
-                                p.id AS IdVenta, 
-                                p.nombre AS Producto, 
-                                sum(dv.cantidad) AS Cantidad, 
-                                p.precio AS Precio
-                            FROM 
-                                venta v
-                                INNER JOIN detalle_venta dv ON v.id = dv.Venta_id
-                                INNER JOIN producto p ON p.id = dv.Producto_id
-                            WHERE 
-                                v.fecha = %s
-                            group by p.id
-                            order by sum(dv.cantidad) desc
-                            """, (fecha,))
-                            
-            return cursor.fetchall()
-        
     def obtener_ventas_mes(self, fecha):  # fecha esperada: 'YYYY-MM'
-        # Obtener los productos vendidos en un mes
-        with self.conexion.cursor() as cursor: # Corrección: buscar alternativa a DATE(v.fecha) en el where
+    # Obtener los productos vendidos en un mes
+        with self.conexion.cursor() as cursor:
             cursor.execute("""
                 SELECT 
                     p.id AS IdVenta, 
                     p.nombre AS Producto, 
-                    sum(dv.cantidad) AS Cantidad, 
+                    SUM(dv.cantidad) AS Cantidad, 
                     p.precio AS Precio
                 FROM 
-                    venta v
-                    INNER JOIN detalle_venta dv ON v.id = dv.Venta_id
-                    INNER JOIN producto p ON p.id = dv.Producto_id
+                    producto p
+                    INNER JOIN detalle_venta dv ON p.id = dv.Producto_id
+                    INNER JOIN venta v ON v.id = dv.Venta_id
                 WHERE 
-                    DATE_FORMAT(v.fecha, '%%Y-%%m') = %s
-                group by p.id
-                order by sum(dv.cantidad) desc
+                    DATE_FORMAT(v.fecha, '%Y-%m') = %s
+                GROUP BY 
+                    p.id, p.nombre, p.precio
+                ORDER BY 
+                    SUM(dv.cantidad) DESC
             """, (fecha,))
-            return cursor.fetchall()
+        return cursor.fetchall()
+
+        
+def obtener_ventas_mes(self, fecha):  # fecha esperada: 'YYYY-MM'
+    # Obtener los productos vendidos en un mes
+    with self.conexion.cursor() as cursor:
+        cursor.execute("""
+            SELECT 
+                p.id AS IdVenta, 
+                p.nombre AS Producto, 
+                SUM(dv.cantidad) AS Cantidad, 
+                p.precio AS Precio
+            FROM 
+                venta v
+                INNER JOIN detalle_venta dv ON v.id = dv.Venta_id
+                INNER JOIN producto p ON dv.Producto_id = p.id
+            WHERE 
+                DATE_FORMAT(v.fecha, '%Y-%m') = %s
+            GROUP BY p.id, p.nombre, p.precio
+            ORDER BY SUM(dv.cantidad) DESC
+        """, (fecha,))
+        return cursor.fetchall()
+
 
 
     def obtener_reporte_ventas(self): # Devolver IdVenta, Empleado, Fecha, Total
@@ -422,25 +437,29 @@ class BaseDatos:
             return cursor.fetchall()
         
 
-    def obtener_reporte_ventas_por_fecha(self, fecha_inicio, fecha_fin): # Devuelve Fecha, IngresoTotal, ProductosVendidos, Ganancia
-        # Obtener reporte de ventas por fecha
-        with self.conexion.cursor() as cursor: # Corrección: orden de inner join y DATE(v.fecha)
-            cursor.execute("""SELECT 
-                                DATE(v.fecha) AS Fecha,
-                                SUM(v.total_venta) AS IngresoTotal,
-                                SUM(dv.cantidad) AS ProductosVendidos,
-                                SUM(v.total_venta) * 0.15 AS Ganancia
-                            FROM 
-                                venta v
-                                INNER JOIN detalle_venta dv ON v.id = dv.Venta_id
-                                INNER JOIN producto p ON dv.Producto_id = p.id
-                            WHERE 
-                                DATE(v.fecha) BETWEEN %s AND %s
-                            GROUP BY 
-                                DATE(v.fecha)
-                            ORDER BY 
-                                Fecha DESC""", (fecha_inicio, fecha_fin))
-            return cursor.fetchall()
+    def obtener_reporte_ventas_por_fecha(self, fecha_inicio, fecha_fin):  
+    # Devuelve Fecha, IngresoTotal, ProductosVendidos, Ganancia
+        with self.conexion.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    DATE(v.fecha) AS Fecha,
+                    SUM(v.total_venta) AS IngresoTotal,
+                    SUM(dv.cantidad) AS ProductosVendidos,
+                    SUM(v.total_venta) * 0.15 AS Ganancia
+                FROM 
+                    detalle_venta dv
+                    INNER JOIN producto p ON dv.Producto_id = p.id
+                    INNER JOIN venta v ON v.id = dv.Venta_id
+                WHERE 
+                    DATE(v.fecha) BETWEEN %s AND %s
+                GROUP BY 
+                    DATE(v.fecha)
+                ORDER BY 
+                    Fecha DESC
+            """, (fecha_inicio, fecha_fin))
+        return cursor.fetchall()
+
+
 
 
     def obtener_reporte_ventas_por_dia(self): # select date(v.fecha) as Fecha, sum(v.total_venta) as IngresoTotal, sum(dv.cantidad) as ProductosVendidos, sum(v.total_venta) - sum(v.total_venta) * 0.15 as Ganancia, (select p2.nombre from producto p2 inner join detalle_venta dv2 on p2.id = dv.Producto_id group by p2.nombre order by sum(dv2.cantidad) desc limit 1) as Producto from producto p inner join detalle_venta dv on p.id = dv.Producto_id inner join venta v on v.id = dv.Venta_id group by date(v.fecha);
