@@ -137,6 +137,7 @@ class BaseDatos:
             """, (nombre,))
             return cursor.fetchall()
 
+
     def buscar_producto_ventas_por_nombre(self, nombre):
         # Buscar productos para ventas (con índice en 'nombre')
         print("este tambien ya se arreglo")
